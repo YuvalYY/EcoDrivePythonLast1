@@ -5,6 +5,14 @@ import numpy as np
 from sklearn.cluster import KMeans
 
 
+def get_and_save_centers(input_dir, output_path, k):
+    centers = get_centers(input_dir, k)
+    with open(output_path,'w+') as f:
+        for center in centers:
+            f.write(str(center[0])+','+str(center[1])+'\n')
+    return centers
+
+
 def get_centers(input_dir, k):
     np.set_printoptions(threshold=np.inf)
     x = np.array(load_dir_gps(input_dir), dtype=('float', 'float'))
