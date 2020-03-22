@@ -8,8 +8,12 @@ import modeler
 
 
 def calc_dir_distance(input_dir):
+    average = 0
     for filename in os.listdir(input_dir):
-        print(calc_file_distance(os.path.join(input_dir, filename)))
+        x = calc_file_distance(os.path.join(input_dir, filename))
+        average += x
+        print(filename + ' : ' + str(x))
+    print('Average is : ' + str(average / len(os.listdir(input_dir))))
 
 
 def calc_file_average_speed(input_path):
@@ -40,6 +44,15 @@ def load_file_gps(input_path):
         for row in csv_reader:
             tuple_list.append((float(row[1]), float(row[2])))
     return tuple_list
+
+
+def centers_file_to_geojson(input_path):
+    tuple_list = []
+    with open(input_path, "r") as f:
+        csv_reader = reader(f)
+        for row in csv_reader:
+            tuple_list.append((float(row[0]), float(row[1])))
+    return tuple_list_to_geojson_coordinates(tuple_list)
 
 
 def tuple_list_to_geojson_coordinates(tuple_list):

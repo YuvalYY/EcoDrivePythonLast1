@@ -40,7 +40,9 @@ def generate_file_model(input_path, output_path, centers_list):
 
     with open(output_path, 'w+', newline='') as f:
         csv_writer = writer(f)
-        csv_writer.writerows(generate_model(matrix))
+        x = generate_model(matrix)
+        print(str(len(x)) + ' centers in file')
+        csv_writer.writerows(x)
 
 
 def load_centers_file(input_path):
@@ -92,12 +94,12 @@ def generate_model(matrix):
     while not matrix[i][-3]:
         i += 1
 
-    model_matrix.append([matrix[i][-2], matrix[i][-1], 5 * round(float(matrix[i][3])/5), 0.0])  # Add the first center
+    model_matrix.append([matrix[i][-2], matrix[i][-1], 5 * round(float(matrix[i][3]) / 5), 0.0])  # Add the first center
     model_matrix[-1][-1] += calculate_cost(matrix[i][0], matrix[i + 1][0], matrix[i][4], matrix[i + 1][4])
     i += 1  # Advance i
     while i < len(matrix) - 1:
         if matrix[i][-3]:
-            model_matrix.append([matrix[i][-2], matrix[i][-1], 5 * round(float(matrix[i][3])/5), 0.0])
+            model_matrix.append([matrix[i][-2], matrix[i][-1], 5 * round(float(matrix[i][3]) / 5), 0.0])
             model_matrix[-1][-1] += calculate_cost(matrix[i][0], matrix[i + 1][0], matrix[i][4], matrix[i + 1][4])
         else:
             model_matrix[-1][-1] += calculate_cost(matrix[i][0], matrix[i + 1][0], matrix[i][4], matrix[i + 1][4])
