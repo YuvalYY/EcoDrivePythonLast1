@@ -8,6 +8,23 @@ vertex_dict = {}
 # still need to mark the broken files
 
 
+def generate_and_save_cheapest_model_and_optimal(input_dir, model_output_path, optimal_output_path):
+    generate_and_save_cheapest_model(input_dir, model_output_path)
+    generate_and_save_optimal(optimal_output_path)
+
+
+def generate_and_save_optimal(optimal_output_path):
+    rows = []
+    curr = get_start()
+    while curr:
+        rows.append(curr.to_row())
+        curr = curr.father
+    rows = rows[1:-1]  # remove start and end vertices
+    with open(optimal_output_path, 'w+', newline='') as f:
+        csv_writer = writer(f)
+        csv_writer.writerows(rows)
+
+
 def generate_and_save_cheapest_model(input_dir, output_path):
     with open(output_path, 'w+', newline='') as f:
         csv_writer = writer(f)
@@ -20,6 +37,7 @@ def generate_cheapest_model(input_dir):
         load_model_file(os.path.join(input_dir, filename))
     calc_vertex_neighbors()
     dijkstra()
+    generate_and_save_optimal(r'C:\Users\Lior\Desktop\Optimal.csv')
     return make_organized_list()
 
 
@@ -66,6 +84,7 @@ def dijkstra():
             if neighbor not in visited_vertexes and neighbor not in found_vertexes:
                 found_vertexes.append(neighbor)
         current_vertex.update_neighbors()
+    print(get_start().cost_to)
 
 
 def create_start_and_end():
@@ -92,6 +111,10 @@ def make_organized_list():
 
     temp_dict = {v.get_latlon(): [] for v in organized_list}
 
+    # The organized_list is composed of the order at which we traverse from start to end, if the path skips a
+    # landmark We will check for it in the for below, but it will not be known Therefore you must devise a new way to
+    # organize the list in accordance to the landmarks, perhaps find a file which has all of the landmarks and act
+    # according to it
     for v in vertex_dict.values():
         if v.lat != -200 and v.lat != 200:
             temp_dict[v.get_latlon()].append([v.lat, v.lon, v.speed, v.father.speed])
@@ -128,6 +151,9 @@ class Vertex:
 
     def get_latlon(self):
         return str(self.lat) + ',' + str(self.lon)
+
+    def to_row(self):
+        return [self.lat, self.lon, self.speed]
 
     def calc_neighbors_cost(self):
         for i in range(len(self.neighbors)):

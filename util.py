@@ -1,3 +1,5 @@
+import datetime
+import math
 import os
 from csv import reader
 
@@ -36,6 +38,10 @@ def calc_file_distance(input_path):
     return dist / 1000
 
 
+def csv_to_geojson(input_path):
+    return tuple_list_to_geojson_coordinates(load_file_gps(input_path))
+
+
 def load_file_gps(input_path):
     tuple_list = []
     with open(input_path, "r") as f:
@@ -55,10 +61,18 @@ def centers_file_to_geojson(input_path):
     return tuple_list_to_geojson_coordinates(tuple_list)
 
 
+def dir_to_geojson(input_dir):
+    x = []
+    for filename in os.listdir(input_dir):
+        file_path = os.path.join(input_dir, filename)
+        x.extend(load_file_gps(file_path))
+    tuple_list_to_geojson_coordinates(x)
+
+
 def tuple_list_to_geojson_coordinates(tuple_list):
     string = '{"type": "FeatureCollection","features": [\n'
     for tup in tuple_list:
-        string += '{"type": "Feature","properties": {},"geometry": {"type": "Point","coordinates": ['
+        string += '{"type": "Feature","properties": {"marker-size": "small"},"geometry": {"type": "Point","coordinates": ['
         string += str(tup[1]) + ',' + str(tup[0])
         string += ']}},\n'
     string = string[:-2]
@@ -96,3 +110,38 @@ def calc_model_fuel_cost(input_path):
             sum0 += float(line[-1])
             lastlinecost = float(line[-1])
     return sum0 - lastlinecost
+
+
+def calc_model_dir_fuel_cost(input_dir):
+    x = []
+    for filename in os.listdir(input_dir):
+        d = calc_model_fuel_cost(os.path.join(input_dir, filename))
+        print(f'{filename} = {d}')
+        x.append(d)
+    print(f'best = {min(x)}')
+    print(f'avg = {sum(x)/len(x)}')
+    print(f'worst = {max(x)}')
+    return x
+
+
+def gps_csv_to_gpx(input_path, output_path):
+    name = input_path.split('\\')[-1].replace('.csv', '').replace('GPS ', '')
+    string = '<?xml version="1.0" encoding="UTF-8" standalone="no" ?>\n<gpx xmlns="http://www.topografix.com/GPX/1/1" ' \
+             'creator="MapSource 6.16.1" version="1.1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ' \
+             'xsi:schemaLocation="http://www.topografix.com/GPX/1/1 ' \
+             'http://www.topografix.com/GPX/1/1/gpx.xsd">\n<trk>\n<name> '
+    string += name
+    string += '</name>\n<trkseg>\n'
+    with open(input_path, 'r') as f:
+        for s in f:
+            line = s.strip().split(',')
+            string += '<trkpt lat="' + line[1] + '" lon="' + line[2] + '"><ele>0.000000</ele><time>'
+            target_date = str(datetime.datetime(1970, 1, 1) + datetime.timedelta(0, 0, 0, int(line[0]))).split(' ')
+            string += target_date[0] + 'T' + target_date[1] + 'Z</time></trkpt>\n'
+        string += '</trkseg>\n</trk>\n</gpx>'
+    with open(output_path, 'w+') as f:
+        f.write(string)
+
+
+def calc_k_for_section(section_length, interval_length, avg_speed):
+    return int(math.floor((section_length * 3600) / (interval_length * avg_speed)))
